@@ -24,9 +24,11 @@ html, body{
 #carousel-container{
     height: 50%;
     background-color: rgb(0,0,0);
+    z-index: 1;
 }
-#media-option{
-height:5%;
+#media-options{
+    height:5%;
+    z-index: 1;
 }
 #file-choice-container{
     position: relative;
@@ -77,18 +79,16 @@ height:5%;
     position: absolute;
     top: 50%;
 }
-
-.left{
-    position: relative;
-    float: left;
-}
-
-.right{
-    position: relative;
-    float: right;
-}
 /***********HOVER MODE**********************/
 .chevron:hover {
     z-index: 2;
     color: #0000FF;
+}
+#selected-frame{
+    height: 600px;
+    width: 400px;
+}
+
+#selection, #carousel-container{
+    display: block;
 }

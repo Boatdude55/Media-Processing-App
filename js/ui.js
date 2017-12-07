@@ -5,15 +5,24 @@ $(function () {
   /**
    * Object for handling relevant MyDOM elements
    * */
-  var UIElements = {}; 
-  UIElements ={
-          submit : $("#upload"),
-          files : $("#file"),
-          carousel : $("#workspaceContainer"),
-          carouselLeft: $(".carousel-control-prev"),
-          carouselRight:$(".carousel-control-next"),
-          editor : $("#frame-container"),
-          submitTime: $("#submit-times")
+
+  var UIElements = {
+    submit : $("#upload"),
+    files : $("#file"),
+    carousel : $("#workspaceContainer"),
+    homeCarousel: $("#home"),
+    carouselLeft: $(".carousel-control-prev"),
+    carouselRight:$(".carousel-control-next"),
+    editor : $("#frame-container"),
+    rangeModal: {
+      dataMin: $("#start-time"),
+      dataMax: $("#end-time"),
+      data: $("#workspace-name"),
+      submit: $("#submit-times")
+    },
+    nav: $("#directory"),
+    selector: $("#selection"),
+    editor: $("#selected-frame"),
   };
   
   var frameObj = function () {
@@ -88,6 +97,13 @@ $(function () {
         "class": "carousel-inner",
         id: name
       };
+    },
+    nav: function ( name )  {
+      return {
+        "class": "btn directory",
+        id: name + "Btn",
+        value: name
+      };
     }
   };
   
@@ -103,75 +119,77 @@ $(function () {
       }
     },
     getFrames: function () {
-      let StartTime = document.getElementById("start-time");
-      let EndTime = document.getElementById("end-time");
-      let SetTimes = [StartTime, EndTime];
+      
+      let startTime = UIElements.rangeModal.dataMin[0];
+      let endTime = UIElements.rangeModal.dataMax[0];
+      let workspaceName = UIElements.rangeModal.data[0];
+      //let StartTime = document.getElementById("start-time");
+      //let EndTime = document.getElementById("end-time");
+      let SetTimes = [startTime, endTime];
       let times = [0,0];
       const fps = 1/4;
       let frameCache = [];
       
-      let video = $('video').hasClass("active"); 
-      let dest = MyDOM.CreateElement( 'div' , MyDOM.ElemStyle["workspace"] );
+      let video = $('.carousel-item').filter(".active").children("video")[0];
       
-      video.addEventListener('loadeddata', function () {
-        /**
-         * event makes sure video is fully loaded
-         * sets the playback time to 0
-         **/
-         this.currentTime = 0;
-      }, false);
-    
-        if(dest.childElementCount > 0){
-            /**
-             * reloading the video so there are no playback issues
-             * might remove later
-             * */
-            video.load();
-        }
+      if ( video !== undefined ) {
         
-        /**
-         * Might turn this into a function later
-         * */
-        let j=0;
-        for(let i of SetTimes){
-            /**
-             * Converts the times into a format
-             * that video events can use 
-             * Take substrings using the colon as base
-             * parse substrings to ints
-             * multiply string1 by 60 and add on string2 for a time
-            **/
-            let x = parseInt(i.value.substr(0, i.value.length - 3), 10);
-            let y = parseInt(i.value.substr(i.value.length - 2), 10);
-            i = (x*60) + y;
-            times[j] = i;
-            j++;
-        }
-        
-        video.currentTime = times[0];//setting a new currentTime triggers seeking
-        
-        video.addEventListener('seeked', function () {
-          /**when frame is captured, increase with fps trying to get a decent framerate
-           * keep in mind this for rotoscoping so the framerate may not have to be that high
-           * */
-          times[0]+=(fps);
-         //if still in seeking range
-          if ( times[0] <= times[1] ) {
-        
-              /**Event is triggered when seeking is done
-              * generateThumbnail() will get the currentTime and convert it to canvas element
-              * */
-              generateThumbnail(this);
-              //another seeked event triggered
-              video.currentTime = times[0];
-          }else if( times[0] > times[1] ) {
-            
-            Carousel.addElem( frameCache );
-            frameCache = [];
-  
-          }
+        video.load();
+        video.addEventListener('loadeddata', function () {
+          /**
+           * event makes sure video is fully loaded
+           * sets the playback time to 0
+           **/
+           this.currentTime = 0;
         }, false);
+          
+          /**
+           * Might turn this into a function later
+           * */
+          let j=0;
+          for(let i of SetTimes){
+              /**
+               * Converts the times into a format
+               * that video events can use 
+               * Take substrings using the colon as base
+               * parse substrings to ints
+               * multiply string1 by 60 and add on string2 for a time
+              **/
+              let x = parseInt(i.value.substr(0, i.value.length - 3), 10);
+              let y = parseInt(i.value.substr(i.value.length - 2), 10);
+              i = (x*60) + y;
+              times[j] = i;
+              j++;
+          }
+          
+        
+          video.currentTime = times[0];//setting a new currentTime triggers seeking
+          
+          video.addEventListener('seeked', function () {
+            /**when frame is captured, increase with fps trying to get a decent framerate
+             * keep in mind this for rotoscoping so the framerate may not have to be that high
+             * */
+            times[0]+=(fps);
+           //if still in seeking range
+            if ( times[0] <= times[1] ) {
+          
+                /**Event is triggered when seeking is done
+                * generateThumbnail() will get the currentTime and convert it to canvas element
+                * */
+                let newFrame = generateThumbnail(this);
+                frameCache.push(newFrame);
+                //another seeked event triggered
+                video.currentTime = times[0];
+            }else if( times[0] > times[1] ) {
+              
+              
+              Carousel.createSpace( frameCache, workspaceName.value );
+              frameCache = [];
+    
+            }
+          }, false);
 
+      }
       function generateThumbnail ( frame ) {
   
         let c = document.createElement("canvas");
@@ -181,38 +199,83 @@ $(function () {
         c.height = 190;
         ctx.drawImage(frame, 0, 0, c.width, c.height);
       
-        frameCache.push(c);
+        return c;
+        //frameCache.push(c);
   
       }
-    }
+    },
+    setSpace: function ( event ) {
+      
+      let dirName = event.target.value;
+      
+      let dir = Carousel.Workspaces[dirName];
+      
+      let prevSpace = $('.carousel-inner').replaceWith(dir);
+      let prevName = prevSpace[0].id;
   
+      Carousel.Workspaces[prevName] = prevSpace[0];
+    }
   };
+  
+  var NavBar = {
+    add: function ( dirName ) {
+      
+      let btnStyle = MyDOM.ElemStyle['nav'](dirName);
+      let newBtn = MyDOM.CreateElement("button", btnStyle);
+      newBtn.innerHTML = dirName;
+      UIElements.nav.append(newBtn);
+    }
+    
+  };
+  var Button = {
+    Events: {
+      select: function () {
 
+          let selection = $(".active").children();
+          
+          //$("#carousel-container").fadeToggle(1, "swing");
+          let destCtx = UIElements.editor[0].getContext('2d');
+            
+          destCtx.drawImage( selection[0], 0, 0);
+      }
+    }
+  };
+  
+  
   var Carousel = Carousel || {};
   
-  Carousel.addElem = function ( elems ) {
-
-     $("#workspace-identifier").on( "hide.bs.modal", function ( e ) {
-       
-        e.preventDefault();
-        console.log($("#workspace-name").val());
-        
-     })
-     
-     $("#workspace-identifier").on( "hidden.bs.modal", function ( e ) {
-       
-       e.preventDefault();
-       let cont = MyDOM.CreateElement('div', MyDOM.ElemStyle["workspace"]('myupload'));
-       let slide = MyDOM.CreateElement('div', MyDOM.ElemStyle['slide']());
-       
-       
-       $(elems).insertBefore(".carousel-control-prev");
-       $(elems).wrapAll(cont).wrap(slide)
-       $(elems).first().parent(".carousel-item").addClass("active");
-     
-     });
-    };
+  Carousel.Workspaces = {
+    home: ''
+  };
+  
+  Carousel.createSpace = function ( elems, workspace = "home" ) {
     
+      let slide = MyDOM.CreateElement('div', MyDOM.ElemStyle['slide']());
+      
+      if ( arguments.length === 2 ) {
+        
+        let name = workspace;
+        let frames = $(elems);
+        
+        let cont = MyDOM.CreateElement('div', MyDOM.ElemStyle["workspace"](name));
+       
+        //$(elems).insertBefore(".carousel-control-prev");
+        frames = $(elems).wrapAll(cont).wrap(slide).parents('.carousel-inner');
+        frames.children().first().addClass("active");
+        Carousel.Workspaces[name] = frames;
+        NavBar.add(name);
+        
+      }else if( arguments.length === 1 ) {
+
+        $(elems).appendTo(UIElements.homeCarousel[0]);
+        $(elems).wrap(slide);
+        $(elems).first().parent(".carousel-item").addClass("active");
+        
+        Carousel.Workspaces['home'] = $(elems);
+      }
+     
+  };
+  
   Carousel.removeElem = function ( slide ) {
   
      UIElements.carousel.removeChild( slide );
@@ -240,10 +303,10 @@ $(function () {
               
               let media = MyDOM.CreateElement( elemType, tempProp );
               cache.push(media);
-              console.log(cache.length, files.length);
+              
               if( cache.length === files.length ) {
                 
-                Carousel.addElem( cache );
+                Carousel.createSpace( cache );
                 cache = [];
               } 
             }catch(err){
@@ -280,6 +343,10 @@ $(function () {
   
 $(UIElements.submit[0]).click( MyDOM.ClickEvents['upload'] );
 
-$(UIElements.submitTime[0]).click( MyDOM.ClickEvents['getFrames']);
+$(UIElements.rangeModal.submit[0]).click( MyDOM.ClickEvents['getFrames'] );
+
+$(UIElements.nav[0]).on("click", "button", MyDOM.ClickEvents['setSpace'] );
+
+$(UIElements.selector[0]).click(Button.Events['select']);
 
 });

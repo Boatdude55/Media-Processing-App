@@ -22,30 +22,6 @@
    
     <body>
         <div class="modal-container">
-        <div class="modal fade" id="workspace-identifier" tabindex="-1" role="dialog" aria-hidden="true">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-    
-                    <div class="modal-header">
-                        <p class="modal-title">Name Workspaces</p>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                          <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-    
-                    <div class="modal-body">
-                        <input type="text" id="workspace-name"/>
-                        <button class="btn" type="button" id="workspace-submit">Submit</button>
-                    </div> 
-    
-                    <div class="modal-footer">
-                        <p>Use the search bar to toogle between workspaces
-                            It's easy as typing in your workspace name</p>
-                    </div>
-    
-                </div>
-            </div>
-        </div>
         <div class="modal fade media-controls" id="range-container" tabindex="-1" role="dialog" aria-hidden="true">
             <div class="modal-dialog" role="document">
                 <div class="modal-content">
@@ -58,23 +34,26 @@
                     </div>
 
                     <div class="modal-body" id="frame-timerange">
-                        <input id="start-time" type="text" placeholder="ex: 0:00" class="form-control"/>
-                        <input id="end-time" type="text" placeholder="ex: 0:08" class="form-control"/>
+                        <input id="start-time" type="text" placeholder="start, ex: 0:00"/>
+                        <input id="end-time" type="text" placeholder="end, ex: 0:08"/>
+                        <input id="workspace-name" type="text" placeholder="name"/>
                     </div> 
 
                     <div class="modal-footer" id="submit-wrapper">
-                        <button id="submit-times" type="button" class="btn" value="Get Frames"></button>
+                        <button id="submit-times" type="button close" class="btn" data-dismiss="modal">Get Frames</button>
                     </div>
 
                 </div>
             </div>
         </div>  
         </div>
+        
         <div id="main-container" class="container-fluid">
+
             <div id="head-content" class="row">
                 <div id="file-choice-container" class="col">
                     <input type="file" id="file" class="form-control" multiple>
-                    <button type="button" class="btn" id="upload" data-toggle="modal" data-target="#workspace-identifier">
+                    <button type="button" class="btn" id="upload">
                         <i class="ml-3 fa fa-upload fa-2x fa-pull-left" aria-hidden="true"></i>
                     </button>
                 </div>
@@ -82,19 +61,27 @@
 
             <div id="file-content" class="row">
 
-                <div id="frame-container" class="col-md-10">Place holder for selected frame
+                <div id="frame-container" class="col-md-10">
                     <canvas id="selected-frame"></canvas>
                 </div>
                 
                 <div id="controls-menu-container" class="col-md-2">Place holder for controls menu</div>
 
             </div>
+            
             <div id="media-options" class="row">
-                <div class="btn-group">
-                    <button class="btn" id="select">
+                
+                <div class="btn-group col-md-6" id="directory">
+                    <button class="btn directory" id="homeBtn" value="home">
+                        <i class="fa fa-home" aria-hidden="true"></i>
+                    </button>
+                </div>
+                 
+                <div class="btn-group col-md-6" id="options">
+                    <button class="btn" id="compress" data-toggle="collapse" data-target="#workspaceContainer" aria-expanded="false">
                         <i class="fa fa-compress" aria-hidden="true"></i>
                     </button>
-                    <button class="btn" id="select">
+                    <button class="btn" id="selection">
                         <i class="fa fa-plus" aria-hidden="true"></i>
                     </button>
                     <button class="btn" data-toggle="modal" data-target="#range-container">
@@ -104,47 +91,16 @@
                         <i class="fa fa-times" aria-hidden="true"></i>
                     </button>
                 </div>
+                
             </div>
-            <div id="carousel-container" class="row collaspse">
-                <!--
-                    <div class="chevron-hover left col-md-1" > <i class="fa fa-chevron-left fa-5x chevron" aria-hidden="true"></i> </div>
-                    <div id="carousel-slides" class="col-md-10 carousel slide" data-ride="carousel">
-                        <div class="controls left">left</div>
-                        <div class="controls right">
-                            <button class="btn btn-primary" data-toggle="modal" data-target="#range-container">
-                                <i class="fa fa-sliders process" id="get-frames" aria-hidden="true"></i>
-                            </button>
-                            <button class="btn btn-primary" id="select">
-                                <i class="fa fa-plus" aria-hidden="true"></i>
-                            </button>
-                            <div class="modal fade media-controls" id="range-container" tabindex="-1" role="dialog" aria-hidden="true">
-                                <div class="modal-dialog" role="document">
-                                    <form class="modal-content">
-    
-                                        <div class="modal-header">
-                                            <p class="modal-title">Choose playback range</p>
-                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                              <span aria-hidden="true">&times;</span>
-                                            </button>
-                                        </div>
-    
-                                        <div class="modal-body" id="frame-timerange">
-                                            <input id="start-time" type="text" placeholder="ex: 0:00" class="form-control"/>
-                                            <input id="end-time" type="text" placeholder="ex: 0:08" class="form-control"/>
-                                        </div> 
+
+            <div id="carousel-container" class="row">
+                
+                <div id="workspaceContainer" class="collaspse carousel slide col-md-12" data-ride="carousel" data-interval="false">
                     
-                                        <div class="modal-footer" id="submit-wrapper">
-                                            <input id="submit-times" type="submit" class="btn btn-primary" value="Get Frames">
-                                        </div>
-    
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="carousel-inner" id="home">
+                        
                     </div>
-                    <div class="chevron-hover right col-md-1" > <i class="fa fa-chevron-right fa-5x chevron" aria-hidden="true"></i> </div>
-                -->
-                <div id="workspaceContainer" class="carousel slide col-md-12" data-ride="carousel" data-interval="false">
                   <a class="carousel-control-prev" href="#workspaceContainer" role="button" data-slide="prev">
                     <span class="carousel-control-prev-icon" aria-hidden="true"></span>
                     <span class="sr-only">Previous</span>
