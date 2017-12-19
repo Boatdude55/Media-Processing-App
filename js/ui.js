@@ -13,7 +13,7 @@ $(function () {
     homeCarousel: $("#home"),
     carouselLeft: $(".carousel-control-prev"),
     carouselRight:$(".carousel-control-next"),
-    editor : $("#frame-container"),
+    editor : $("#selected-frame"),
     rangeModal: {
       dataMin: $("#start-time"),
       dataMax: $("#end-time"),
@@ -23,6 +23,8 @@ $(function () {
     nav: $("#directory"),
     selector: $("#selection"),
     editor: $("#selected-frame"),
+    canny: $("#canny"),
+    compress: $("#compress")
   };
   
   var frameObj = function () {
@@ -195,10 +197,12 @@ $(function () {
         let c = document.createElement("canvas");
         
         let ctx = c.getContext("2d");
-        c.width = 220;
-        c.height = 190;
+        c.width = 500;
+        c.height = 490;
+        c.className = 'd-block mx-auto';
+        
         ctx.drawImage(frame, 0, 0, c.width, c.height);
-      
+        apply.canny( c );
         return c;
         //frameCache.push(c);
   
@@ -206,10 +210,8 @@ $(function () {
     },
     setSpace: function ( event ) {
       
-      let dirName = event.target.value;
-      
+      let dirName = event.currentTarget.value;
       let dir = Carousel.Workspaces[dirName];
-      
       let prevSpace = $('.carousel-inner').replaceWith(dir);
       let prevName = prevSpace[0].id;
   
@@ -224,23 +226,37 @@ $(function () {
       let newBtn = MyDOM.CreateElement("button", btnStyle);
       newBtn.innerHTML = dirName;
       UIElements.nav.append(newBtn);
+      
     }
     
   };
+  
   var Button = {
     Events: {
       select: function () {
 
-          let selection = $(".active").children();
           
-          //$("#carousel-container").fadeToggle(1, "swing");
+          /*
+          let selection = $(".active").children();
+          console.log(selection[0], UIElements.editor[0].parentElement);
+          UIElements.editor[0].width = selection[0].width + 100;
+          UIElements.editor[0].height = selection[0].height +100;
           let destCtx = UIElements.editor[0].getContext('2d');
-            
           destCtx.drawImage( selection[0], 0, 0);
+          $(UIElements.editor[0]).data("state","defined");
+          */
       }
     }
   };
   
+  var Processes = {
+    canny: function () {
+      
+      let img = UIElements.editor[0].getContext('2d');
+      let pxls = img.getImageData();
+      
+    }
+  }
   
   var Carousel = Carousel || {};
   
@@ -341,12 +357,104 @@ $(function () {
   };
   ////////////////////////////////////////////////////////////////////////////////
   
-$(UIElements.submit[0]).click( MyDOM.ClickEvents['upload'] );
+  $(UIElements.submit[0]).click( MyDOM.ClickEvents['upload'] );
+  
+  $(UIElements.rangeModal.submit[0]).click( MyDOM.ClickEvents['getFrames'] );
+  
+  $(UIElements.nav[0]).on("click", "button", MyDOM.ClickEvents['setSpace'] );
+  
+  $(UIElements.selector[0]).click(Button.Events['select']);
+  
+  $(UIElements.compress[0]).click( function ( event ) {
+    
+    var toggle = event.currentTarget;
 
-$(UIElements.rangeModal.submit[0]).click( MyDOM.ClickEvents['getFrames'] );
+    if( $(toggle).data("state") === "show") {
+      
+      $("#carousel-container").animate({
+        width: '0%',
+        height: '0%',
+        display: 'hidden'
+      });
+      UIElements.nav[0].style.display = 'hidden';
+      $(toggle).data("state", "hide");
+    }else {
+      
+      $("#carousel-container").animate({
+        width: '100%',
+        height: '50%',
+        display: 'block'
+      });
+      UIElements.nav[0].style.display = 'block';
+      $(toggle).data("state", "show");
+    }
+  });
+  
+  $('#stream-modal').on('shown.bs.modal', function() {
+       
+       var constraints = window.constraints = {
+      audio: false,
+      video: true
+    };
+       function handleError(error) {
+          if (error.name === 'ConstraintNotSatisfiedError') {
+            errorMsg('The resolution ' + constraints.video.width.exact + 'x' +
+                constraints.video.width.exact + ' px is not supported by your device.');
+          } else if (error.name === 'PermissionDeniedError') {
+            errorMsg('Permissions have not been granted to use your camera and ' +
+              'microphone, you need to allow the page access to your devices in ' +
+              'order for the demo to work.');
+          }
+          errorMsg('getUserMedia error: ' + error.name, error);
+        }
+        
+        function errorMsg(msg, error) {
+          errorElement.innerHTML += '<p>' + msg + '</p>';
+          if (typeof error !== 'undefined') {
+            console.error(error);
+          }
+        }
+        
+        var errorElement = document.querySelector('#errorMsg');
+        var video = document.querySelector('#stream');
+      
+        if (window.navigator.mediaDevices && window.navigator.mediaDevices.getUserMedia) {
+                // Not adding `{ audio: true }` since we only want video now
+                window.navigator.mediaDevices.getUserMedia({ video: true }).then(function (stream) {
+                    video.src = window.URL.createObjectURL(stream);
+                    video.play();
+                }).catch(handleError);
+            }
+            else if (window.navigator.getUserMedia) { // Standard
+                window.navigator.getUserMedia({ video: true }, function (stream) {
+                    video.src = stream;
+                    video.play();
+                }, handleError);
+            } else if (window.navigator.webkitGetUserMedia) { // WebKit-prefixed
+                window.navigator.webkitGetUserMedia({ video: true }, function (stream) {
+                    video.src = window.webkitURL.createObjectURL(stream);
+                    video.play();
+                }, handleError);
+            } else if (window.navigator.mozGetUserMedia) { // Mozilla-prefixed
+                window.navigator.mozGetUserMedia({ video: true }, function (stream) {
+                    video.src = window.URL.createObjectURL(stream);
+                    video.play();
+                }, handleError);
+            }
 
-$(UIElements.nav[0]).on("click", "button", MyDOM.ClickEvents['setSpace'] );
-
-$(UIElements.selector[0]).click(Button.Events['select']);
-
+  });
+  
+  $('#stream-modal').on('hidden.bs.modal', function () {
+    
+     var video = document.querySelector('#stream');
+     
+      let stream = video.srcObject;
+      let tracks = stream.getTracks();
+    
+      tracks.forEach(function(track) {
+        track.stop();
+      });
+    
+      video.srcObject = null;
+  });
 });
