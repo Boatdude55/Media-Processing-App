@@ -34,6 +34,22 @@ html, body{
     position: relative;
     float: left;
 }
+#file-content{
+    background-color: rgb(155,155,155);
+    position: relative;
+}
+#frame-container{
+    width: 90%;
+    height: 90%;
+    position: absolute;
+    top: 5%;
+    left: 5%;
+}
+#selected-frame{
+    background-color: rgb(255,255,255);
+    width: 100%;
+    height: 100%;
+}
 /***********BUTTONS******************/
 #upload{
     height: 100%;
@@ -50,8 +66,8 @@ html, body{
     display: block;
     margin-left: auto;
     margin-right: auto;
-    width: auto;
-    height: auto;
+    width: 500px;
+    height: 500px;
 }
 .chevron-hover i{
     position: absolute;

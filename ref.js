@@ -1,3 +1,62 @@
+var Error = function ( ) {
+  
+  var errResponse = {};
+  
+  this.setErrors = function () {
+    
+  };
+  
+  this.setResponse = function ( dest, err ) {
+  
+  };
+  
+  this.check = function ( result ) {
+    
+    return errResponse[result];
+  };
+  
+};
+/**
+ * Code for User Interface 
+ * Split up into modules
+ * base modules for interface are observer, element creater, and cache
+ * */
+
+
+/**
+ * function for creating elements
+ * @param type; the type of html element to create
+ * @param properties; associative array of keys=attribute name, and values=attribute value
+ * */
+var CreateElement = function ( type, properties ) { 
+  
+  try{
+
+   var tmp = document.createElement( type );
+
+  }catch(err){
+
+    alert(err.name, err.message);
+
+  }
+  for ( let i in properties ) {
+
+    if ( properties.hasOwnProperty(i) ) {
+
+      tmp.setAttribute(i, properties[i]);
+
+    }
+
+  } 
+   return tmp; 
+};
+
+/**
+ * Using Observer Pattern
+ * Observable UploadPanel
+ * Observer CarouselPanel
+ * */
+
 var Base = function () {
   
   this.Observable = (function () {
@@ -109,34 +168,13 @@ var Base = function () {
   })();
 
 };
-var CreateElement = function ( type, properties ) { 
-  
-  try{
 
-   var tmp = document.createElement( type );
-
-  }catch(err){
-
-    alert(err.name, err.message);
-
-  }
-  for ( let i in properties ) {
-
-    if ( properties.hasOwnProperty(i) ) {
-
-      tmp.setAttribute(i, properties[i]);
-
-    }
-
-  } 
-   return tmp; 
-};
 var UploadPanel = (function () {
   
   //Base
   var tools = new Base;
-  tools.prototype = new CreateElement;
-
+  tools.prototype.createElement = new CreateElement;
+  
   //Upoad Specific
   var styleProps = {
     video: function ( result , mime ) {
@@ -154,25 +192,16 @@ var UploadPanel = (function () {
       };
     }
   };
-  var fileInput;
   
   /**
   *@function detects mime type from string provided by File
   **/
   var mimeDetect = function ( mimeString ) {
   
-    var mimeType = mimeString.includes('video') ? 'video' : (mimeString.includes('image') ? 'img' : false );
+    var mimeType = mimeString.includes('video') ? 'video' : (mediaType.includes('image') ? 'img' : false );
     
     return mimeType;
     
-  };
-  
-  var getFiles = function () {
-      return fileInput.files;
-  };
-  
-  var setFile = function ( src ) {
-    fileInput =  src;
   };
   
   /**
@@ -181,13 +210,12 @@ var UploadPanel = (function () {
    * @param {FileList} files
    * @return [Array] cache, newly created img and video elems
    * */
-  var upload = function (  ) {
+  var upload = function ( files ) {
     
     /**
      * @private
      * @member [Array]
      * */
-     var files = getFiles();
     var cache = [];
     
     /**
@@ -256,11 +284,12 @@ var UploadPanel = (function () {
   
   return {
     tools: tools,
-    upload: upload,
-    setSrc: setFile
+    upload: upload
   };
   
 })();
+
+
 var CarouselPanel = (function ( ) {
 
     /**
@@ -330,49 +359,43 @@ var CarouselPanel = (function ( ) {
            return this.carouselCont;
            
     };
-    var appendToHome = function ( elems ) {
+    var appendToHome = function ( callback, elems, workspace = "home" ) {
+
         
+  
         var s = createSlides(elems);
-        var c = setContainer('home', s );
+        var c = setContainer( workspace, s );
       
-      WorkSpaces.Observable.notify({home:s});
+      WorkSpaces.Observable.notify({workspace:s});
 
       return c;
       
     };
+    
+    var appendToWorkspace = function () {
+      
+    };
+    
 })();
 
-$(function () {
+var ApplyToDOM = ( function () {
   
-  /**
-   * Object for handling relevant MyDOM elements
-   * */
-
-  var UIElements = {
-    submit : $("#upload"),
-    files : $("#file"),
-    carousel : $("#workspaceContainer"),
-    homeCarousel: $("#home"),
-    carouselLeft: $(".carousel-control-prev"),
-    carouselRight:$(".carousel-control-next"),
-    editor : $("#selected-frame"),
-    rangeModal: {
-      dataMin: $("#start-time"),
-      dataMax: $("#end-time"),
-      data: $("#workspace-name"),
-      submit: $("#submit-times")
-    },
-    nav: $("#directory"),
-    selector: $("#selection"),
-    editor: $("#selected-frame"),
-    canny: $("#canny"),
-    compress: $("#compress")
+  var insert = function ( dest , src ) {
+    
   };
- 
-  ///////////////////////////////////////////////////////////////////////////////
-  UploadPanel.setSrc(UIElements.files[0]); 
-  ////////////////////////////////////////////////////////////////////////////////
-
-  $(UIElements.submit[0]).click(UploadPanel.upload);
-
-});
+  
+  var collapse = function ( dest ) {
+    
+  };
+  
+  var remove = function ( dest , index ) {
+    
+    
+  };
+  
+  return {
+    apply: apply,
+    collapse: collapse
+  };
+  
+})();
