@@ -1,0 +1,11 @@
+{
+  "name": "RotoTool",
+  "version": "0.0.1",
+  "description": "A Gui for RotoScoping",
+  "main": "main.js",
+  "license": "MIT",
+  "person": {
+    "name": "Ivan Mucyo Ngabo",
+    "email": "ivanm3@email.arizona.edu"
+  }
+}
