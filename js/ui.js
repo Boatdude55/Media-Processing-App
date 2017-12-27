@@ -15,11 +15,17 @@ var Base = function () {
        * @param {Object} observer 
        * */
        var attach = function ( observer ) {
-         
-         Observers.push( observer );
-         
+         try{
+           
+          Observers.push( observer );
+          
+         }catch( err ){
+           
+          console.error(err.name, err.message );
+          
+         }
        };
-       
+    
        /**
         * @public
         * @function detach observer to Observers
@@ -27,15 +33,19 @@ var Base = function () {
         * */
        var detach = function ( observer ) {
          
-          Observers = Observers.filter(
+          try{
+            Observers = Observers.filter(
             
-            function (item ) {
-                if ( item !== observer) {
-                    return item;
-                }
-            }
-            
-          );
+              function (item ) {
+                  if ( item !== observer) {
+                      return item;
+                  }
+              }
+              
+            );
+          }catch(err){
+            console.error(err.name, err.message);
+          }
           
        };
        
@@ -46,15 +56,22 @@ var Base = function () {
         * @param {observer} [thisObj] - thisArg for call()
         * */
        var notify = function( data , thisObj ) {
-         
-          var scope = thisObj;
-          
-          Observers.forEach( function ( item ) {
+        
+          try{ 
             
-              item.call( scope, data );
+              var scope = thisObj;
               
-          });
-          
+              Observers.forEach( function ( item ) {
+                
+                  item.call( scope, data );
+                  
+              });
+              
+          }catch(err){
+            
+            console.error(err.name, err.message);
+            
+          }  
         };
         
         return {
@@ -108,34 +125,35 @@ var Base = function () {
       
   })();
 
-};
-var CreateElement = function ( type, properties ) { 
+  this.CreateElement = function ( type, properties ) { 
   
-  try{
-
-   var tmp = document.createElement( type );
-
-  }catch(err){
-
-    alert(err.name, err.message);
-
-  }
-  for ( let i in properties ) {
-
-    if ( properties.hasOwnProperty(i) ) {
-
-      tmp.setAttribute(i, properties[i]);
-
+    try{
+  
+     var tmp = document.createElement( type );
+  
+    }catch(err){
+  
+      alert(err.name, err.message);
+  
     }
-
-  } 
-   return tmp; 
+    for ( let i in properties ) {
+  
+      if ( properties.hasOwnProperty(i) ) {
+  
+        tmp.setAttribute(i, properties[i]);
+  
+      }
+  
+    } 
+     return tmp; 
+  };
+  
 };
+
 var UploadPanel = (function () {
   
   //Base
   var tools = new Base;
-  tools.prototype = new CreateElement;
 
   //Upoad Specific
   var styleProps = {
@@ -158,6 +176,7 @@ var UploadPanel = (function () {
   
   /**
   *@function detects mime type from string provided by File
+  * @param {String} mimeString
   **/
   var mimeDetect = function ( mimeString ) {
   
@@ -171,6 +190,9 @@ var UploadPanel = (function () {
       return fileInput.files;
   };
   
+  /**
+   * @param {Element} src
+   * */
   var setFile = function ( src ) {
     fileInput =  src;
   };
@@ -261,6 +283,7 @@ var UploadPanel = (function () {
   };
   
 })();
+
 var CarouselPanel = (function ( ) {
 
     /**
@@ -269,7 +292,6 @@ var CarouselPanel = (function ( ) {
      * */
     var WorkSpaces = new Base;
     var NavBar = new Base;
-    var createElement = new CreateElement;
 
     this.styleProps = {
       slide: function () {
@@ -292,7 +314,8 @@ var CarouselPanel = (function ( ) {
         };
       }
     };
-    this.carouselCont = CreateElement('div',this.styleProps['workspace']('home'));
+    
+    this.carouselCont = WorkSpaces.CreateElement('div',this.styleProps['workspace']('home'));
     
     var createSlides = function ( mediaElems, wrap ) {
           
@@ -330,8 +353,9 @@ var CarouselPanel = (function ( ) {
            return this.carouselCont;
            
     };
-    var appendToHome = function ( elems ) {
-        
+    
+    var appendToHome = function ( elems) {
+  
         var s = createSlides(elems);
         var c = setContainer('home', s );
       
@@ -340,14 +364,21 @@ var CarouselPanel = (function ( ) {
       return c;
       
     };
+    
+    var appendToWorkSpace = function () {
+      
+    };
+    
+    return {
+      appendToHome: appendToHome,
+      appendToWorkSpace: appendToWorkSpace,
+      WorkSpaces: WorkSpaces,
+      NavBar: NavBar
+    };
 })();
 
 $(function () {
   
-  /**
-   * Object for handling relevant MyDOM elements
-   * */
-
   var UIElements = {
     submit : $("#upload"),
     files : $("#file"),
@@ -368,9 +399,11 @@ $(function () {
     canny: $("#canny"),
     compress: $("#compress")
   };
- 
-  ///////////////////////////////////////////////////////////////////////////////
-  UploadPanel.setSrc(UIElements.files[0]); 
+
+  var uploadObservers = CarouselPanel.appendToHome();
+  UploadPanel.setSrc(UIElements.files[0]);
+  UploadPanel.tools.Observable.attach( uploadObservers );
+  
   ////////////////////////////////////////////////////////////////////////////////
 
   $(UIElements.submit[0]).click(UploadPanel.upload);
